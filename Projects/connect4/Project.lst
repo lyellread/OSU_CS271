@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/27/19 22:36:31
+Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
 CONNECT FOUR     (connect4.asm				     Page 1 - 1
 
 
@@ -27,10 +27,11 @@ Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/27/19 22:36:31
 			      C .LIST
 			      C 
 					
- = 00000007			rows			EQU		7
- = 00000007			cols			EQU		7
- = 00000031			turns_to_cat	EQU		7*7 ;rows * cols; maybe there's a neater way?
-
+ = 00000007			rows				EQU		7
+ = 00000007			cols				EQU		7
+ = 00000031			turns_to_cat		EQU		7*7 ;rows * cols; maybe there's a neater way?
+ = 00000006			grid_offset_side	EQU		6 ;the space in characters between the terminal left edge and the printout of the grid.
+ = 00000002			grid_offset_top		EQU		2 ;the space in characters between the top of the terminal and the top edge of the grid
  00000000			.data
 
 				;Text Segments
@@ -77,7 +78,7 @@ Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/27/19 22:36:31
  000000AA 0000			player_number				WORD	?	;(1|2) Measures who has just played
  000000AC 0000			turns_played_total			WORD	?	;will increment with each turn, checking against turns_to_cat
  000000AE 0000			computer_switch				WORD	?	;(0|1) Measures weather the player wants 2p or 1p respectively
- 000000B0 0000			winning_player				WORD	?	; (1|2) set by win_check alg.
+ 000000B0 0000			winning_player				WORD	?	;(1|2) set by win_check alg.
 
 				;Array Defenition
  000000B2  00000031 [		connect4_grid				WORD	turns_to_cat DUP(0)
@@ -247,23 +248,81 @@ Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/27/19 22:36:31
  00000123			main ENDP
 
 				;--------------------------------------------------------------------
- 00000123			print_grid PROC 
+ 00000123			print_grid PROC USES eax edx ecx ebx
 				;	
 				;	Prints out the Connect 4 Grid on the display. 
 				;	Recieves:
 				;	Returns:
 				;	Requires:
 				;--------------------------------------------------------------------
- 00000123  BA 0000004E R		mov		edx, OFFSET DBG_1
- 00000128  E8 00000000 E		call	WriteString
+					;DEBUG:
+ 00000123  50		   *	    push   eax
+ 00000124  52		   *	    push   edx
+ 00000125  51		   *	    push   ecx
+ 00000126  53		   *	    push   ebx
+ 00000127  BA 0000004E R		mov		edx, OFFSET DBG_1
+ 0000012C  E8 00000000 E		call	WriteString
 					
-					;moar code here later bois. Check on page 191 IRVINE;
+					;clear the screen to make way for the BEAUTIFUL grid to appear
+ 00000131  E8 00000000 E		call		ClrScr
+ 00000136  BA 00000000			mov		edx, 0
+ 0000013B  E8 00000000 E		call		GotoXY
+
+					;print the dashed lines (basically nested for)
+ 00000140  B9 00000007			mov		ecx, rows ;ecx = 7
+ 00000145  B8 00000000			mov		eax, 0 ;zero that register.
+ 0000014A  B0 2D			mov		al, '-'
+ 0000014C  B4 0F			mov		ah, ((rows*2)+1) ;two underscores per row, plus one to start	
+ 0000014E				dashed_line:
+						
+						;move the cursor to the right place....
+ 0000014E  B2 06				mov		dl, grid_offset_side ;x coordinate
+ 00000150  8B D9				mov		ebx, ecx
+ 00000152  6B DB 02				imul		ebx, 2
+ 00000155  83 C3 02				add		ebx, grid_offset_top
+ 00000158  8A F3				mov		dh, bl
+						;mov		dh, ((ecx*2)+grid_offset_top)
+ 0000015A  E8 00000000 E			call	GotoXY ;move the cursor
+						
+						;print out the appropriate bar for that spot
+ 0000015F  E8 00000007				call	print_char_n_times
+ 00000164  E2 E8				loop	dashed_line
+						
 					
- 0000012D  C3				ret
- 0000012E			print_grid ENDP
 					
+					ret
+ 00000166  5B		   *	    pop    ebx
+ 00000167  59		   *	    pop    ecx
+ 00000168  5A		   *	    pop    edx
+ 00000169  58		   *	    pop    eax
+ 0000016A  C3		   *	    ret    00000h
+ 0000016B			print_grid ENDP
+					
+					
+				;--------------------------------------------------------------------
+ 0000016B			print_char_n_times PROC USES eax ecx
+				;	
+				;	Prints out the character passed in al, ah times.
+				;	Recieves:
+				;	Returns:
+				;	Requires:
+				;--------------------------------------------------------------------
+					;DEBUG:
+					
+ 0000016B  50		   *	    push   eax
+ 0000016C  51		   *	    push   ecx
+ 0000016D  0F B6 CC			movzx	ecx, ah
+ 00000170				print_char_top:
+ 00000170  E8 00000000 E			call	WriteChar
+ 00000175  E2 F9				loop	print_char_top
+					
+					ret
+ 00000177  59		   *	    pop    ecx
+ 00000178  58		   *	    pop    eax
+ 00000179  C3		   *	    ret    00000h
+ 0000017A			print_char_n_times ENDP
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/27/19 22:36:31
+Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
 CONNECT FOUR     (connect4.asm				     Symbols 2 - 1
 
 
@@ -358,7 +417,7 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000114 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000012E Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000017A Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -477,7 +536,10 @@ main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000123 Public 
   cat_game . . . . . . . . . . .	L Near	 000000EC _TEXT	
   play_again . . . . . . . . . .	L Near	 000000FD _TEXT	
   hard_stop  . . . . . . . . . .	L Near	 0000011C _TEXT	
-print_grid . . . . . . . . . . .	P Near	 00000123 _TEXT	Length= 0000000B Public STDCALL
+print_char_n_times . . . . . . .	P Near	 0000016B _TEXT	Length= 0000000F Public STDCALL
+  print_char_top . . . . . . . .	L Near	 00000170 _TEXT	
+print_grid . . . . . . . . . . .	P Near	 00000123 _TEXT	Length= 00000048 Public STDCALL
+  dashed_line  . . . . . . . . .	L Near	 0000014E _TEXT	
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
@@ -711,6 +773,8 @@ cyan . . . . . . . . . . . . . .	Number	 00000003h
 exit . . . . . . . . . . . . . .	Text   	 INVOKE ExitProcess,0
 gray . . . . . . . . . . . . . .	Number	 00000008h   
 green  . . . . . . . . . . . . .	Number	 00000002h   
+grid_offset_side . . . . . . . .	Number	 00000006h   
+grid_offset_top  . . . . . . . .	Number	 00000002h   
 lightBlue  . . . . . . . . . . .	Number	 00000009h   
 lightCyan  . . . . . . . . . . .	Number	 0000000Bh   
 lightGray  . . . . . . . . . . .	Number	 00000007h   

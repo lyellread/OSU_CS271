@@ -6,10 +6,11 @@ TITLE CONNECT FOUR     (connect4.asm)
 
 INCLUDE Irvine32.inc
 	
-rows			EQU		7
-cols			EQU		7
-turns_to_cat	EQU		7*7 ;rows * cols; maybe there's a neater way?
-
+rows				EQU		7
+cols				EQU		7
+turns_to_cat		EQU		7*7 ;rows * cols; maybe there's a neater way?
+grid_offset_side	EQU		6 ;the space in characters between the terminal left edge and the printout of the grid.
+grid_offset_top		EQU		2 ;the space in characters between the top of the terminal and the top edge of the grid
 .data
 
 ;Text Segments
@@ -27,7 +28,7 @@ DBG_4						BYTE	"Current Turn (## of ##)",0
 player_number				WORD	?	;(1|2) Measures who has just played
 turns_played_total			WORD	?	;will increment with each turn, checking against turns_to_cat
 computer_switch				WORD	?	;(0|1) Measures weather the player wants 2p or 1p respectively
-winning_player				WORD	?	; (1|2) set by win_check alg.
+winning_player				WORD	?	;(1|2) set by win_check alg.
 
 ;Array Defenition
 connect4_grid				WORD	turns_to_cat DUP(0)
@@ -175,19 +176,63 @@ hard_stop:
 main ENDP
 
 ;--------------------------------------------------------------------
-print_grid PROC 
+print_grid PROC USES eax edx ecx ebx
 ;	
 ;	Prints out the Connect 4 Grid on the display. 
 ;	Recieves:
 ;	Returns:
 ;	Requires:
 ;--------------------------------------------------------------------
+	;DEBUG:
 	mov		edx, OFFSET DBG_1
 	call	WriteString
 	
-	;moar code here later bois. Check on page 191 IRVINE;
+	;clear the screen to make way for the BEAUTIFUL grid to appear
+	;call		ClrScr
+	;mov		edx, 0
+	;call		GotoXY
+
+	;print the dashed lines (basically nested for)
+	mov		ecx, rows ;ecx = 7
+	mov		eax, 0 ;zero that register.
+	mov		al, '-'
+	mov		ah, ((rows*2)+1) ;two underscores per row, plus one to start	
+	dashed_line:
+		
+		;move the cursor to the right place....
+		mov		dl, grid_offset_side ;x coordinate
+		mov		ebx, ecx
+		imul		ebx, 2
+		add		ebx, grid_offset_top
+		mov		dh, bl
+		;mov		dh, ((ecx*2)+grid_offset_top)
+		call	GotoXY ;move the cursor
+		
+		;print out the appropriate bar for that spot
+		call	print_char_n_times
+		loop	dashed_line
+		
+	
 	
 	ret
 print_grid ENDP
 	
+	
+;--------------------------------------------------------------------
+print_char_n_times PROC USES eax ecx
+;	
+;	Prints out the character passed in al, ah times.
+;	Recieves:
+;	Returns:
+;	Requires:
+;--------------------------------------------------------------------
+	;DEBUG:
+	
+	movzx	ecx, ah
+	print_char_top:
+		call	WriteChar
+		loop	print_char_top
+	
+	ret
+print_char_n_times ENDP
 END main
