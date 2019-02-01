@@ -188,7 +188,8 @@ print_grid PROC USES eax edx ecx ebx
 	call	WriteString
 	
 	;clear the screen to make way for the BEAUTIFUL grid to appear
-	;call		ClrScr
+	call			WaitMsg
+	call		ClrScr
 	;mov		edx, 0
 	;call		GotoXY
 
@@ -202,10 +203,10 @@ print_grid PROC USES eax edx ecx ebx
 		;move the cursor to the right place....
 		mov		dl, grid_offset_side ;x coordinate
 		mov		ebx, ecx
-		imul		ebx, 2
+		imul	ebx, 2
 		add		ebx, grid_offset_top
 		mov		dh, bl
-		;mov		dh, ((ecx*2)+grid_offset_top)
+		;mov	dh, ((ecx*2)+grid_offset_top)
 		call	GotoXY ;move the cursor
 		
 		;print out the appropriate bar for that spot

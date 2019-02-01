@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
+Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/30/19 14:58:52
 CONNECT FOUR     (connect4.asm				     Page 1 - 1
 
 
@@ -264,43 +264,44 @@ Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
  0000012C  E8 00000000 E		call	WriteString
 					
 					;clear the screen to make way for the BEAUTIFUL grid to appear
- 00000131  E8 00000000 E		call		ClrScr
- 00000136  BA 00000000			mov		edx, 0
- 0000013B  E8 00000000 E		call		GotoXY
+ 00000131  E8 00000000 E		call			WaitMsg
+ 00000136  E8 00000000 E		call		ClrScr
+					;mov		edx, 0
+					;call		GotoXY
 
 					;print the dashed lines (basically nested for)
- 00000140  B9 00000007			mov		ecx, rows ;ecx = 7
- 00000145  B8 00000000			mov		eax, 0 ;zero that register.
- 0000014A  B0 2D			mov		al, '-'
- 0000014C  B4 0F			mov		ah, ((rows*2)+1) ;two underscores per row, plus one to start	
- 0000014E				dashed_line:
+ 0000013B  B9 00000007			mov		ecx, rows ;ecx = 7
+ 00000140  B8 00000000			mov		eax, 0 ;zero that register.
+ 00000145  B0 2D			mov		al, '-'
+ 00000147  B4 0F			mov		ah, ((rows*2)+1) ;two underscores per row, plus one to start	
+ 00000149				dashed_line:
 						
 						;move the cursor to the right place....
- 0000014E  B2 06				mov		dl, grid_offset_side ;x coordinate
- 00000150  8B D9				mov		ebx, ecx
- 00000152  6B DB 02				imul		ebx, 2
- 00000155  83 C3 02				add		ebx, grid_offset_top
- 00000158  8A F3				mov		dh, bl
-						;mov		dh, ((ecx*2)+grid_offset_top)
- 0000015A  E8 00000000 E			call	GotoXY ;move the cursor
+ 00000149  B2 06				mov		dl, grid_offset_side ;x coordinate
+ 0000014B  8B D9				mov		ebx, ecx
+ 0000014D  6B DB 02				imul	ebx, 2
+ 00000150  83 C3 02				add		ebx, grid_offset_top
+ 00000153  8A F3				mov		dh, bl
+						;mov	dh, ((ecx*2)+grid_offset_top)
+ 00000155  E8 00000000 E			call	GotoXY ;move the cursor
 						
 						;print out the appropriate bar for that spot
- 0000015F  E8 00000007				call	print_char_n_times
- 00000164  E2 E8				loop	dashed_line
+ 0000015A  E8 00000007				call	print_char_n_times
+ 0000015F  E2 E8				loop	dashed_line
 						
 					
 					
 					ret
- 00000166  5B		   *	    pop    ebx
- 00000167  59		   *	    pop    ecx
- 00000168  5A		   *	    pop    edx
- 00000169  58		   *	    pop    eax
- 0000016A  C3		   *	    ret    00000h
- 0000016B			print_grid ENDP
+ 00000161  5B		   *	    pop    ebx
+ 00000162  59		   *	    pop    ecx
+ 00000163  5A		   *	    pop    edx
+ 00000164  58		   *	    pop    eax
+ 00000165  C3		   *	    ret    00000h
+ 00000166			print_grid ENDP
 					
 					
 				;--------------------------------------------------------------------
- 0000016B			print_char_n_times PROC USES eax ecx
+ 00000166			print_char_n_times PROC USES eax ecx
 				;	
 				;	Prints out the character passed in al, ah times.
 				;	Recieves:
@@ -309,20 +310,20 @@ Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
 				;--------------------------------------------------------------------
 					;DEBUG:
 					
- 0000016B  50		   *	    push   eax
- 0000016C  51		   *	    push   ecx
- 0000016D  0F B6 CC			movzx	ecx, ah
- 00000170				print_char_top:
- 00000170  E8 00000000 E			call	WriteChar
- 00000175  E2 F9				loop	print_char_top
+ 00000166  50		   *	    push   eax
+ 00000167  51		   *	    push   ecx
+ 00000168  0F B6 CC			movzx	ecx, ah
+ 0000016B				print_char_top:
+ 0000016B  E8 00000000 E			call	WriteChar
+ 00000170  E2 F9				loop	print_char_top
 					
 					ret
- 00000177  59		   *	    pop    ecx
- 00000178  58		   *	    pop    eax
- 00000179  C3		   *	    ret    00000h
- 0000017A			print_char_n_times ENDP
+ 00000172  59		   *	    pop    ecx
+ 00000173  58		   *	    pop    eax
+ 00000174  C3		   *	    ret    00000h
+ 00000175			print_char_n_times ENDP
 				END main
-Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/28/19 14:40:37
+Microsoft (R) Macro Assembler Version 14.16.27026.1	    01/30/19 14:58:52
 CONNECT FOUR     (connect4.asm				     Symbols 2 - 1
 
 
@@ -417,7 +418,7 @@ Segments and Groups:
 FLAT . . . . . . . . . . . . . .	GROUP
 STACK  . . . . . . . . . . . . .	32 Bit	 00001000 Para	  Stack	  'STACK'	 
 _DATA  . . . . . . . . . . . . .	32 Bit	 00000114 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000017A Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000175 Para	  Public  'CODE'	
 
 
 Procedures, parameters, and locals:
@@ -536,10 +537,10 @@ main . . . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000123 Public 
   cat_game . . . . . . . . . . .	L Near	 000000EC _TEXT	
   play_again . . . . . . . . . .	L Near	 000000FD _TEXT	
   hard_stop  . . . . . . . . . .	L Near	 0000011C _TEXT	
-print_char_n_times . . . . . . .	P Near	 0000016B _TEXT	Length= 0000000F Public STDCALL
-  print_char_top . . . . . . . .	L Near	 00000170 _TEXT	
-print_grid . . . . . . . . . . .	P Near	 00000123 _TEXT	Length= 00000048 Public STDCALL
-  dashed_line  . . . . . . . . .	L Near	 0000014E _TEXT	
+print_char_n_times . . . . . . .	P Near	 00000166 _TEXT	Length= 0000000F Public STDCALL
+  print_char_top . . . . . . . .	L Near	 0000016B _TEXT	
+print_grid . . . . . . . . . . .	P Near	 00000123 _TEXT	Length= 00000043 Public STDCALL
+  dashed_line  . . . . . . . . .	L Near	 00000149 _TEXT	
 printf . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 scanf  . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
