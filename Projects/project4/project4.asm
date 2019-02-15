@@ -1,4 +1,4 @@
-TITLE Project 4     (project3.asm)
+TITLE Project 4     (project4.asm)
 
 ; Author: Lyell Read
 ; Course / Project ID: CS271/Project_4                Date:2/13/2019
