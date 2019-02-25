@@ -9,5 +9,14 @@ introduction PROC
 ;===============================================
 
 
+	push	ebp
+	mov	ebp, esp
+
+
+
+
+	;check to make sure all lonesome pushes are accounted for. 
+	pop	ebp
+	ret
 
 introduction ENDP
