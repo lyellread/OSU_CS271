@@ -52,7 +52,6 @@ mwincheck MACRO
 	add		eax, edx
 ENDM
 	
-	
 msetval MACRO value, element, array_name
 	push	esi
 	push	eax
@@ -130,21 +129,14 @@ cat_game_printout			BYTE	"You done did a cat game boi.  ",0
 play_again_prompt			BYTE	"Play Again (1 or 0):",0
 player_1					BYTE	"Player ",0
 invalid_entry				BYTE	"Invalid. Re- Enter:",0
-player_col_entry_2			BYTE	", please enter the col to play in:",0	
+player_col_entry_2			BYTE	", please your column choice:",0	
 player_win_2				BYTE	" WON.  ",0
 
 g_bar						BYTE	" +---+---+---+---+---+---+---+ ",0
 g_numbers					BYTE	"   0   1   2   3   4   5   6",0
 
-DBG_1						BYTE	"HORIZONTAL:",0
-DBG_2						BYTE	"VERTICAL:",0
-DBG_3						BYTE	"DIAGONAL-UP:",0
-DBG_4						BYTE	"DIAGONAL-DOWN:",0
-DBG_5						BYTE	"Value:",0
 ;Array Defenition
-connect4_grid				WORD	49 DUP (0)
-									
-									
+connect4_grid				WORD	49 DUP (0)								
 check_array					WORD	4 DUP(0)
 
 .data?
@@ -158,14 +150,18 @@ winning_player				WORD	?	;(1|2) set by win_check alg.
 player_col					WORD	?	;(0..6) Choice of where to play.
 
 
+	;===============================
+	;         CODE SEGMENT
+	;===============================
+
 .code
 main PROC
 	
 	top_main:
 
-	;===============================================================
-	;SET UP ALL VALUES TO ESSENTIALLY "RESET" THE GAME
-	;=============================================================== note: add array blanking! 
+	;===================================
+	;SET UP ALL VALUES TO RESET THE GAME
+	;===================================
 
 	mwritestringnewline welcome_message ; welcome message
 	mwritestring player_count_prompt ; Ask the user how many players they want (SET COMPUTER SWITCH)
@@ -196,9 +192,9 @@ computer_switch_no_change:
 		add		esi, 2
 		loop	loop_main_top	
 	
-	;===============================================================
-	;LET THE GAME BEGIN! < < < < < < < < < < < < < < < < < < < < < < 
-	;===============================================================	
+	;===================
+	;LET THE GAME BEGIN!
+	;===================	
 	
 	; call	CrLF
 	; call	Waitmsg
@@ -327,18 +323,18 @@ main ENDP
 ;===============================================
 computer_input_validation PROC USES eax edx ebx
 ;
-;Pre-Conditions: 
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions: None
+;Post-Conditions:player_col is set to the appropriate value
+;Requires:nothing
+;Returns:nothing
+;Description:generates the CPU play in an available square
 ;===============================================
 
 	push	ebp
 	mov		ebp, esp
 	
 	col_check_top:
-
+	mov		edx, 0
 	mov		eax, 7; set rand high range
 	call	RandomRange ; rand on 0..6
 	
@@ -362,11 +358,11 @@ computer_input_validation ENDP
 ;===============================================
 player_input_validation PROC USES eax edx ebx
 ;
-;Pre-Conditions: 
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions: None
+;Post-Conditions: player value stored
+;Requires:nothing
+;Returns:nothing
+;Description:prompts the player to enter a value. makes sure that that value is OK
 ;===============================================
 
 	push	ebp
@@ -408,11 +404,11 @@ player_input_validation ENDP
 ;===============================================
 check_column_playable PROC USES eax esi
 ;
-;Pre-Conditions:
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions:EAX set.
+;Post-Conditions:returned in edx 1 = ok to place; 0 = full col
+;Requires:EAX to be set to col
+;Returns:EDX set to result
+;Description:checks if col can be played in
 ;===============================================
 
 	push	ebp
@@ -445,11 +441,11 @@ check_column_playable ENDP
 ;===============================================
 get_input_on_range PROC
 ;
-;Pre-Conditions: UPPER in ebx. Lower in edx. Result in eax
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions: UPPER in ebx. Lower in edx. 
+;Post-Conditions:Result in eax
+;Requires: see pre conditions
+;Returns:result of input in eax
+;Description: forces input on range defined as edx and ebx (^)
 ;===============================================
 
 	push	ebp
@@ -500,8 +496,9 @@ check_horizontal PROC USES esi ecx ebx eax
 ;Pre-Conditions:
 ;Post-Conditions:
 ;Requires:
-;Returns:
-;Description:
+;Returns:win in EDX
+;Description:iterates for every possible start value of a 
+;			horizontal string, and checks if it is a win
 ;===============================================
 	
 
@@ -522,9 +519,6 @@ check_horizontal PROC USES esi ecx ebx eax
 			dec		ecx ; col
 
 			;======================
-			;mwritecharpipe
-			;mwritedecfrom ebx
-			;mwritedecfrom ecx
 			
 			call	load_horizontal
 			call	check_for_win ;player in eax, results in edx
@@ -558,8 +552,8 @@ check_horizontal ENDP
 ;===============================================
 load_horizontal PROC USES ebx ecx edx esi eax
 ;
-;Pre-Conditions:
-;Post-Conditions:
+;Pre-Conditions: EBX = row, EDX = col
+;Post-Conditions:check_array is filled with the appropriate values
 ;Requires:
 ;Returns:
 ;Description: Loads the horizontal segment starting at ebx, edx into check_array.
@@ -609,8 +603,9 @@ check_vertical PROC USES esi ecx ebx eax
 ;Pre-Conditions:
 ;Post-Conditions:
 ;Requires:
-;Returns:
-;Description:
+;Returns: win in EDX
+;Description: Iterates for all vertical start points, checking if there 
+;			is a win condition there.
 ;===============================================
 	
 	push	ebp
@@ -630,14 +625,12 @@ check_vertical PROC USES esi ecx ebx eax
 			dec		ecx
 
 			;======================
-			; mwritecharpipe
-			; mwritedecfrom ebx
-			; mwritedecfrom ecx
 			
 			call	load_vertical
 			call	check_for_win ;player in eax, results in edx
 			cmp		edx, 0
 			jne		return_vertical_success ; assume the winner is the current player, as wincheck would have caught the other case
+			
 			;======================
 
 			inc		ebx
@@ -670,7 +663,7 @@ load_vertical PROC USES ebx ecx edx esi eax
 ;Post-Conditions:
 ;Requires:
 ;Returns:
-;Description: Loads the horizontal segment starting at ebx, edx into check_array.
+;Description: Loads the vertical segment starting at ebx, edx into check_array.
 ;===============================================
 
 	push	ebp
@@ -717,8 +710,9 @@ check_diagonal_up PROC USES esi ecx ebx eax
 ;Pre-Conditions:
 ;Post-Conditions:
 ;Requires:
-;Returns:
-;Description:
+;Returns: win in EDX
+;Description:Checks all diagonal up start locations to see if there
+;			is a win case starting there.
 ;===============================================
 	
 	;needs to generate (3,0) -> (6,3) = (0+3, 0) -> (3+3, 3)
@@ -740,10 +734,7 @@ check_diagonal_up PROC USES esi ecx ebx eax
 			dec		ecx ;col
 
 			;======================
-			; mwritecharpipe
-			; mwritedecfrom ebx
-			; mwritedecfrom ecx
-			
+
 			call	load_diagonal_up
 			call	check_for_win ;player in eax, results in edx
 			cmp		edx, 0
@@ -781,7 +772,7 @@ load_diagonal_up PROC USES ebx ecx edx esi eax
 ;Post-Conditions:
 ;Requires:
 ;Returns:
-;Description: Loads the horizontal segment starting at ebx, edx into check_array.
+;Description: Loads the diagonal-up segment starting at ebx, edx into check_array.
 ;===============================================
 
 	push	ebp
@@ -830,8 +821,9 @@ check_diagonal_down PROC USES esi ecx ebx eax
 ;Pre-Conditions:
 ;Post-Conditions:
 ;Requires:
-;Returns:
-;Description:
+;Returns:win in EDX
+;Description:Checks all diagonal-down starting locations and 
+;			checks for win case there.
 ;===============================================
 	
 	;(0,0) -> (3,3)
@@ -854,10 +846,6 @@ check_diagonal_down PROC USES esi ecx ebx eax
 
 			;======================
 
-			; mwritecharpipe
-			; mwritedecfrom ebx
-			; mwritedecfrom ecx
-			
 			call	load_diagonal_down
 			call	check_for_win ;player in eax, results in edx
 			cmp		edx, 0
@@ -895,7 +883,7 @@ load_diagonal_down PROC USES ebx ecx edx esi eax
 ;Post-Conditions:
 ;Requires:
 ;Returns:
-;Description: Loads the horizontal segment starting at ebx, edx into check_array.
+;Description: Loads the diagonal-down segment starting at ebx, edx into check_array.
 ;===============================================
 
 	push	ebp
@@ -937,10 +925,10 @@ load_diagonal_down ENDP
 ;===============================================
 get_value_at PROC uses esi ebx ecx
 ;
-;Pre-Conditions:
+;Pre-Conditions:ebx = row; ecx -= col
 ;Post-Conditions:
 ;Requires:
-;Returns:
+;Returns:value in eax
 ;Description:returns value in eax. Use variables to access
 ;===============================================
 
@@ -970,11 +958,11 @@ get_value_at ENDP
 ;===============================================
 check_for_win PROC USES esi ecx ebx
 ;
-;Pre-Conditions:player in eax, result in edx
+;Pre-Conditions:player in eax, check_array is defined
 ;Post-Conditions:
 ;Requires:
-;Returns:
-;Description:
+;Returns:result in edx
+;Description:checks if check_array represents a win condition (1111 or 2222)
 ;===============================================
 
 	push	ebp
@@ -1013,17 +1001,15 @@ check_for_win ENDP
 ;===============================================
 print_grid PROC USES eax ecx edx
 ;
-;Pre-Conditions:
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions: none
+;Post-Conditions: grid is printed in *beauuuuutiful* color
+;Requires:defenition of function that dispays specific character colors
+;Returns:nothing
+;Description:the mostest amazingest fanciestest printout evar
 ;===============================================
 
 	push	ebp
 	mov		ebp, esp
-
-	;call	Clrscr
 	
 	mov		dh, grid_offset_top
 	mov		dl, grid_offset_side
@@ -1095,26 +1081,22 @@ print_grid ENDP
 ;===============================================
 clear_line PROC USES ecx
 ;
-;Pre-Conditions:
-;Post-Conditions:
+;Pre-Conditions:cursor is set to line using gotoXY
+;Post-Conditions:line (first 65 chars) is cleared
 ;Requires:
 ;Returns:
-;Description:
+;Description:blanks out a line whose start is at the current cursor location
 ;===============================================
 
 	push	ebp
 	mov		ebp, esp
-
-	;mov		dh, grid_offset_top + 17
-	;mov		dl, grid_offset_side
 	
 	mov		ecx, 65
 	
 	spaces_print_top:
 	
 		mwritecharspace
-		
-	
+
 	loop 	spaces_print_top
 	
 	call	GotoXY
@@ -1127,11 +1109,11 @@ clear_line ENDP
 ;===============================================
 drop_to_bottom PROC USES ecx eax ebx edx esi
 ;
-;Pre-Conditions:
-;Post-Conditions:
+;Pre-Conditions:grid and player col and player number are defined
+;Post-Conditions:grid has newly added element in the lowest cell it can be in
 ;Requires: that there is no value in the top element of that column
-;Returns:
-;Description:
+;Returns:nothing
+;Description:drops the player's play to the bottom of their column
 ;===============================================
 
 	push	ebp
@@ -1176,11 +1158,11 @@ drop_to_bottom ENDP
 ;===============================================
 print_value PROC USES eax
 ;
-;Pre-Conditions:
-;Post-Conditions:
-;Requires:
-;Returns:
-;Description:
+;Pre-Conditions:called from print_grid
+;Post-Conditions:the cell value is printed. element is passed in ebx
+;Requires:passing of element in ebx
+;Returns:noting
+;Description:wow much colors; wow big printout; 
 ;===============================================
 
 	push	ebp
