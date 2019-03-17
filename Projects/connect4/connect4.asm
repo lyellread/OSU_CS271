@@ -1,10 +1,8 @@
 TITLE CONNECT FOUR     (connect4.asm)
 
 ; Author: Lyell Read
-; Course / Project ID: CS271/connect4           Start_Date:1/22/2019
+; Course / Project ID: CS271/connect4           Timeframe: 1/22/2019 - 3/17/2019
 ; Description: Play the game connect 4 with a 7*7 grid. Either 2p or p vs cpu. Text based. Yeah. 
-
-;OOB's : check if superfluous store to var when call to procs for check. Text color for play again. Range checking for cpu play (no max) and for player input
 
 INCLUDE Irvine32.inc
 .stack 4096
@@ -71,15 +69,50 @@ mwritedecfrom MACRO reg
 	call	WriteDec
 	pop		eax
 ENDM
+
+mresettextcolor MACRO
+	push	eax
 	
+	mov		eax, white + (black * 16)
+	call	SetTextColor
 	
+	pop		eax
+ENDM
+
+mclearhome MACRO
+	push 	edx
+	push	eax
+	
+	call	Clrscr
+
+	mov		edx, 0
+	call	GotoXY
+	
+	mresettextcolor
+	
+	pop		eax
+	pop		edx
+ENDM
+
+mclearandgotoline MACRO
+	push	edx
+	
+	mov		dh, grid_offset_top + 17;total offset from top where this line is.
+	mov		dl, grid_offset_side 
+	
+	call 	gotoXY
+	call	clear_line
+	
+	pop		edx
+ENDM
+
 	;===============================
 	;          CONSTANTS
 	;===============================
 	
 rows				EQU		7
 cols				EQU		7
-turns_to_cat		EQU		49 ;rows * cols; maybe there's a neater way?
+turns_to_cat		EQU		50 ;rows * cols + 1; maybe there's a neater way?
 grid_offset_side	EQU		16 ;the space in characters between the terminal left edge and the printout of the grid.
 grid_offset_top		EQU		3 ;the space in characters between the top of the terminal and the top edge of the grid
 
@@ -93,11 +126,12 @@ grid_offset_top		EQU		3 ;the space in characters between the top of the terminal
 ;Text Segments
 welcome_message				BYTE	"Welcome. ",0
 player_count_prompt			BYTE	"Players (1 or 2):",0
-cat_game_printout			BYTE	"You done did a cat game boi.",0
+cat_game_printout			BYTE	"You done did a cat game boi.  ",0
 play_again_prompt			BYTE	"Play Again (1 or 0):",0
 player_1					BYTE	"Player ",0
+invalid_entry				BYTE	"Invalid. Re- Enter:",0
 player_col_entry_2			BYTE	", please enter the col to play in:",0	
-player_win_2				BYTE	" WON.",0
+player_win_2				BYTE	" WON.  ",0
 
 g_bar						BYTE	" +---+---+---+---+---+---+---+ ",0
 g_numbers					BYTE	"   0   1   2   3   4   5   6",0
@@ -136,7 +170,12 @@ main PROC
 	mwritestringnewline welcome_message ; welcome message
 	mwritestring player_count_prompt ; Ask the user how many players they want (SET COMPUTER SWITCH)
 	
-	call	ReadInt ;User is expected to input 1 or 2. If 1 we want to set the computer switch, otherwise not.
+	;get & check input
+	mov		edx, 1
+	mov		ebx, 2
+	mov		ecx, 0 ; set flag
+	call	get_input_on_range
+	
 	call	CrLF
 	mov		computer_switch, 0
 	cmp		eax, 2 ;if the user has chosen two player, jump to bottom
@@ -161,8 +200,8 @@ computer_switch_no_change:
 	;LET THE GAME BEGIN! < < < < < < < < < < < < < < < < < < < < < < 
 	;===============================================================	
 	
-	call	CrLF
-	call	Waitmsg
+	; call	CrLF
+	; call	Waitmsg
 	call	clrscr
 	
 top_turn:
@@ -192,10 +231,7 @@ computer_turn: ;NOTE: if CPU is playing, then player_num =2
 	;===============================
 	
 	;play CPU turn lol
-	mov		eax, 7; set rand high range
-	call	RandomRange ; rand on 0..6
-	mov		player_col, ax
-	
+	call	computer_input_validation
 	jmp		win_check_label
 	
 player_turn:
@@ -204,18 +240,14 @@ player_turn:
 	;         Player Turn
 	;===============================
 
-	mov		dh, grid_offset_top + 17;total offset from top where this line is.
-	mov		dl, grid_offset_side 
-	
-	call 	gotoXY
-	call	clear_line; gotoxy has set the cursor to the line where this should print. Clear that line.
+	mclearandgotoline
 	
 	mwritestring player_1
 	mov		ax, player_number
 	call	WriteDec
 	mwritestring player_col_entry_2
-	call	ReadDec
-	mov		player_col, ax
+	
+	call	player_input_validation
 	
 	jmp		win_check_label
 	
@@ -246,45 +278,217 @@ win_check_label:
 	jmp		top_turn
 	
 win_for_current_player:
-
-	mov		edx, 0
-	call	GotoXY
 	
-	mov		edx, white + (16* black)
-	call	SetTextColor
+	call	print_grid
+	
+	mclearandgotoline
+	mresettextcolor
 
 	mwritestring player_1
 	movzx	eax, player_number
 	call	WriteDec
-	mwritestringnewline player_win_2
+	mwritestring player_win_2
 	
 	jmp play_again
 
 cat_game:
 	
-	;print that a cat game is reached
-	mwritestringnewline cat_game_printout
+	
+	mclearandgotoline
+	mresettextcolor
+	mwritestring cat_game_printout
 
 	jmp		play_again
 	
 	
 play_again:
 
+	call	Waitmsg
+	
+	mclearhome
 	;print play again message
 	mwritestring play_again_prompt
 
-	call	ReadInt
-	call	CrLF
+	;get & check input
+	mov		edx, 0
+	mov		ebx, 1
+	mov		ecx, 0 ; set flag to not print to line
+	call	get_input_on_range
+	
 	cmp		eax, 1
 	je		top_main
 	jmp		hard_stop
-	
-	
 	
 hard_stop:
 	
 	exit	; exit to operating system
 main ENDP
+
+;===============================================
+computer_input_validation PROC USES eax edx ebx
+;
+;Pre-Conditions: 
+;Post-Conditions:
+;Requires:
+;Returns:
+;Description:
+;===============================================
+
+	push	ebp
+	mov		ebp, esp
+	
+	col_check_top:
+
+	mov		eax, 7; set rand high range
+	call	RandomRange ; rand on 0..6
+	
+	; ==== INPUT CHECK -- COL EMPTY ====
+	call	check_column_playable
+	
+	;check_column_playable returns in edx 1 = OK 0 = FULL
+	cmp		edx, 1
+	je		fill_and_quit
+	jmp		col_check_top ; try again at generating a good random value... please ;)
+		
+	fill_and_quit:
+		
+		mov		player_col, ax
+	
+	pop		ebp
+	ret
+
+computer_input_validation ENDP
+
+;===============================================
+player_input_validation PROC USES eax edx ebx
+;
+;Pre-Conditions: 
+;Post-Conditions:
+;Requires:
+;Returns:
+;Description:
+;===============================================
+
+	push	ebp
+	mov		ebp, esp
+	
+	col_check_top:
+	
+	mov		ecx, 1 ; set flag to print on line.
+	mov		ebx, 6 ; set upper range for input check part 1
+	mov		edx, 0 ; set lower range      "          "
+	
+	;call	ReadDec ; --> eax == col number
+	
+	; ==== INPUT CHECK -- RANGE ====
+	call	get_input_on_range
+	
+	; ==== INPUT CHECK -- COL EMPTY ====
+	call	check_column_playable
+	
+	;check_column_playable returns in edx 1 = OK 0 = FULL
+	cmp		edx, 1
+	je		fill_and_quit
+	
+	retry_with_error:
+	
+		mclearandgotoline
+		mwritestring invalid_entry
+		jmp		col_check_top
+		
+	fill_and_quit:
+		
+		mov		player_col, ax
+	
+	pop		ebp
+	ret
+
+player_input_validation ENDP
+
+;===============================================
+check_column_playable PROC USES eax esi
+;
+;Pre-Conditions:
+;Post-Conditions:
+;Requires:
+;Returns:
+;Description:
+;===============================================
+
+	push	ebp
+	mov		ebp, esp
+
+	mov		esi, OFFSET connect4_grid
+	imul	eax, 2 ; 2 -> 4 (size conversion)
+	
+	add		esi, eax
+	cmp 	[esi], dx ;NOTE: edx==0 at this time. check if target col's top cell is empty
+	
+	je		col_is_free
+	jne		col_is_full
+	
+	col_is_free:
+		mov		edx, 1 ; success
+		jmp		return_to_parent
+
+	col_is_full:
+		mov		edx, 0 ; success
+		jmp		return_to_parent
+
+	
+	return_to_parent:
+	pop		ebp
+	ret
+
+check_column_playable ENDP
+
+;===============================================
+get_input_on_range PROC
+;
+;Pre-Conditions: UPPER in ebx. Lower in edx. Result in eax
+;Post-Conditions:
+;Requires:
+;Returns:
+;Description:
+;===============================================
+
+	push	ebp
+	mov		ebp, esp
+
+	;ebx = upper
+	;edx = lower
+	
+	;text string already printed. Take input:
+	value_entry_top:
+	
+	call	ReadDec
+	cmp		eax, ebx ; eax <= ebx
+	jg		error_message
+	cmp		eax, edx ; eax >= edx
+	jl		error_message
+	jmp		value_ok
+	
+	error_message:
+
+		cmp		ecx, 1
+		je		print_on_line
+		jmp		print_normal
+		
+		print_normal:
+			mwritestring invalid_entry
+			jmp		value_entry_top
+		
+		print_on_line:
+			mclearandgotoline
+			mwritestring invalid_entry
+			jmp		value_entry_top
+			
+	value_ok:
+	
+	pop		ebp
+	ret
+
+get_input_on_range ENDP
 
 	;===============================
 	;      H O R I Z O N T A L
@@ -879,13 +1083,9 @@ print_grid PROC USES eax ecx edx
 	call	gotoXY
 	mwritestring g_numbers
 	
-	mov		eax, white
-	call	SetTextColor
-	
 	add		dh, 2
 	
-	mov		eax, 15
-	call	SetTextColor
+	mresettextcolor
 	
 	pop		ebp
 	ret
@@ -893,7 +1093,7 @@ print_grid PROC USES eax ecx edx
 print_grid ENDP
 
 ;===============================================
-clear_line PROC
+clear_line PROC USES ecx
 ;
 ;Pre-Conditions:
 ;Post-Conditions:
