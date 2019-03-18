@@ -1,5 +1,5 @@
 ;===============================================
-introduction PROC
+load_horizontal PROC
 ;
 ;Pre-Conditions:
 ;Post-Conditions:
@@ -8,15 +8,13 @@ introduction PROC
 ;Description:
 ;===============================================
 
-
 	push	ebp
-	mov	ebp, esp
+	mov		ebp, esp
 
 
 
 
-	;check to make sure all lonesome pushes are accounted for. 
-	pop	ebp
+	pop		ebp
 	ret
 
-introduction ENDP
+load_horizontal ENDP
